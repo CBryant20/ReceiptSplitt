@@ -1,0 +1,10 @@
+.receipt-image-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.receipt-image {
+  max-width: 100%;
+  height: auto;
+}

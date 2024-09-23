@@ -20,11 +20,11 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="top">
-      <h1>Task Tracker</h1>
+    <nav className='top'>
+      <h1>Receipt Split</h1>
       <menu>
         <li>
-          <NavLink to="/">Home</NavLink>
+          <NavLink to='/'>Home</NavLink>
         </li>
         {token ? (
           <li>
@@ -32,7 +32,7 @@ export default function Navbar() {
           </li>
         ) : (
           <li>
-            <NavLink to="/login">Log In</NavLink>
+            <NavLink to='/login'>Log In</NavLink>
           </li>
         )}
       </menu>
