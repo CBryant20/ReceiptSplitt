@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Tesseract from "tesseract.js";
 import axios from "axios";
 
@@ -7,6 +7,9 @@ const ReceiptUploader = () => {
   const [parsedItems, setParsedItems] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -14,10 +17,11 @@ const ReceiptUploader = () => {
 
   const handleUpload = () => {
     if (!file) return;
+    processFile(file);
+  };
 
+  const processFile = (file) => {
     setIsProcessing(true);
-
-    // Use Tesseract to scan the receipt
     Tesseract.recognize(file, "eng")
       .then(({ data: { text } }) => {
         const items = parseReceiptText(text);
@@ -30,7 +34,6 @@ const ReceiptUploader = () => {
       });
   };
 
-  // Improved function to parse the OCR text into items
   const parseReceiptText = (text) => {
     const lines = text.split("\n");
     const parsedItems = lines.map((line) => {
@@ -51,7 +54,6 @@ const ReceiptUploader = () => {
 
   const handleSave = () => {
     setSaveStatus("Saving...");
-
     axios
       .post("/upload-receipt", {
         userId: 1, // Replace with actual user ID
@@ -74,6 +76,32 @@ const ReceiptUploader = () => {
     return items.reduce((sum, item) => sum + (item.price || 0), 0);
   };
 
+  const handleOpenCamera = async () => {
+    setShowCamera(true);
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoRef.current.srcObject = stream;
+    videoRef.current.play();
+  };
+
+  const handleCapture = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      processFile(blob);
+      stopCamera();
+    }, "image/jpeg");
+  };
+
+  const stopCamera = () => {
+    const stream = videoRef.current.srcObject;
+    if (stream) {
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+    }
+    setShowCamera(false);
+  };
+
   return (
     <div>
       <h2>Upload Your Receipt</h2>
@@ -81,6 +109,17 @@ const ReceiptUploader = () => {
       <button onClick={handleUpload} disabled={!file || isProcessing}>
         {isProcessing ? "Processing..." : "Upload Receipt"}
       </button>
+
+      <button onClick={handleOpenCamera}>Use Camera</button>
+
+      {showCamera && (
+        <div className='camera-container'>
+          <video ref={videoRef} style={{ width: "100%", maxHeight: "400px" }} />
+          <canvas ref={canvasRef} style={{ display: "none" }} />
+          <button onClick={handleCapture}>Capture Image</button>
+          <button onClick={stopCamera}>Close Camera</button>
+        </div>
+      )}
 
       {isProcessing && <p>Processing your receipt...</p>}
 

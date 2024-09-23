@@ -1,16 +1,79 @@
-.tasks {
-  li:not(:last-child) {
-    margin-bottom: 1ch;
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+
+  h1 {
+    font-size: 2.5rem;
   }
 
-  form {
-    & > * {
-      margin-right: 0.5ch;
+  img {
+    max-width: 80%;
+    height: auto;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    h1 {
+      font-size: 1.8rem;
+    }
+
+    img {
+      max-width: 60%;
     }
   }
 
-  button {
+  .login-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: 1rem;
     cursor: pointer;
-    padding: 0.1rem 0.25rem;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #555;
+    }
+  }
+
+  .upload-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #555;
+    }
+  }
+}
+
+@media (min-width: 769px) {
+  .login-icon {
+    display: none;
+  }
+
+  .upload-button {
+    display: none;
   }
 }

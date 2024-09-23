@@ -23,9 +23,12 @@ router.post("/register", async (req, res, next) => {
       throw new ServerError(400, `Account with email ${email} already exists.`);
     }
 
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create new user
     const newUser = await prisma.user.create({
-      data: { email, password },
+      data: { email, password: hashedPassword },
     });
 
     const token = jwt.sign({ id: newUser.id });
@@ -38,22 +41,19 @@ router.post("/register", async (req, res, next) => {
 /** Returns token for account if credentials valid */
 router.post("/login", async (req, res, next) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    // Check if username and password provided
-    if (!username || !password) {
-      throw new ServerError(400, "Username and password required.");
+    // Check if email and password provided
+    if (!email || !password) {
+      throw new ServerError(400, "Email and password required.");
     }
 
     // Check if account exists
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { email },
     });
     if (!user) {
-      throw new ServerError(
-        400,
-        `Account with username ${username} does not exist.`
-      );
+      throw new ServerError(400, `Account with email ${email} does not exist.`);
     }
 
     // Check if password is correct
