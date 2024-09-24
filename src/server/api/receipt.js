@@ -33,10 +33,15 @@ router.post("/upload-receipt", async (req, res, next) => {
   try {
     let { items, subtotal, tax, tip, total } = req.body;
 
-    // If items are passed as a string, attempt to parse it
+    // Check for missing fields
+    if (!subtotal || !tax || !tip || !total) {
+      throw new ServerError(400, "All receipt details must be provided.");
+    }
+
+    // Attempt to parse items if it's a string
     if (typeof items === "string") {
       try {
-        items = JSON.parse(items); // Ensure it's valid JSON
+        items = JSON.parse(items);
       } catch (e) {
         throw new ServerError(400, "Invalid JSON format for items.");
       }
@@ -46,6 +51,16 @@ router.post("/upload-receipt", async (req, res, next) => {
     if (!Array.isArray(items)) {
       throw new ServerError(400, "Items must be an array.");
     }
+
+    // Validate each item in the array
+    items.forEach((item) => {
+      if (!item.description || typeof item.price !== "number") {
+        throw new ServerError(
+          400,
+          "Each item must have a description and a numeric price."
+        );
+      }
+    });
 
     // Create the receipt and its associated items
     const receipt = await prisma.receipt.create({
@@ -74,7 +89,7 @@ router.post("/upload-receipt", async (req, res, next) => {
 router.put("/receipt/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { items, subtotal, tax, tip, total } = req.body;
+    let { items, subtotal, tax, tip, total } = req.body;
 
     // Ensure the receipt exists and belongs to the logged-in user
     const receipt = await prisma.receipt.findUnique({ where: { id: +id } });
@@ -83,6 +98,18 @@ router.put("/receipt/:id", async (req, res, next) => {
     }
     if (receipt.userId !== res.locals.user.id) {
       throw new ServerError(403, "This receipt does not belong to you.");
+    }
+
+    // Validate items format
+    if (typeof items === "string") {
+      try {
+        items = JSON.parse(items);
+      } catch (e) {
+        throw new ServerError(400, "Invalid JSON format for items.");
+      }
+    }
+    if (!Array.isArray(items)) {
+      throw new ServerError(400, "Items must be an array.");
     }
 
     // Update the receipt and its items
@@ -94,7 +121,7 @@ router.put("/receipt/:id", async (req, res, next) => {
         tip,
         total,
         items: {
-          deleteMany: {},
+          deleteMany: {}, // Delete existing items
           create: items.map((item) => ({
             description: item.description,
             price: item.price,
